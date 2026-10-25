@@ -14,11 +14,42 @@ main{max-width:680px;margin:auto;padding:14px}.cards{display:grid;grid-template-
 .btn{width:100%;border:0;background:var(--green);color:#fff;border-radius:11px;padding:14px;font-weight:800;margin-top:12px;min-height:50px}.btn.secondary{background:#fff;color:var(--green);border:1px solid var(--green)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #e5ece8;padding:10px 0}.row:last-child{border-bottom:0}.muted{color:var(--muted);font-size:13px}.price{font-weight:800;white-space:nowrap}.bigtotal{font-size:25px;font-weight:850}.notice{background:#edf7fb;color:#476879;padding:12px;border-radius:12px;font-size:13px;margin-bottom:12px}.sale-entry{background:#f7faf8;border:1px solid var(--line);border-radius:11px;padding:11px;margin:8px 0}.sale-entry .row{padding:4px 0}.delete{border:1px solid #e6d4d4;color:#9b6262;background:#fff;padding:6px 9px;border-radius:8px;font-size:12px}.stockitem{border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0}.stockitem strong{display:block}.stockitem small{color:var(--muted)}.pill{display:inline-block;background:#eaf6fc;color:#477f9e;border-radius:20px;padding:3px 8px;font-size:12px;margin-top:5px}
 @media(min-width:560px){main{padding:22px}.card strong{font-size:25px}}
+
+.login-wrap{max-width:430px;margin:26px auto}
+.login-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 8px 26px rgba(55,100,125,.07)}
+.login-card h2{margin:0 0 5px;font-size:23px}
+.login-card p{color:var(--muted);font-size:14px;margin:0 0 15px}
+.login-status{margin-top:12px;font-size:14px;color:#476879;min-height:20px}
+.login-secondary{border:1px solid var(--line);background:#f6fafc;color:var(--ink);border-radius:11px;padding:12px;width:100%;font:inherit;font-weight:700;margin-top:9px}
+#appArea[hidden],#loginArea[hidden]{display:none!important}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.logout{background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 10px;color:var(--ink);font:inherit;font-size:13px;font-weight:700}
+
 </style>
 </head>
 <body>
 <header><h1>🐟 Ceviche de Cenicienta</h1><p>Anota tus ventas en el momento, desde tu celular.</p></header>
 <main>
+<section id="loginArea" class="login-wrap">
+  <div class="login-card">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:42px">🐟</div>
+      <h2>Ceviche de Cenicienta</h2>
+      <p>Ingresa para ver tus ventas y compras privadas.</p>
+    </div>
+    <label>Usuario (tu celular)<input id="loginPhone" type="tel" inputmode="tel" autocomplete="username" placeholder="Tu celular de 9 dígitos" value=""></label>
+    <label>Contraseña<input id="loginPassword" type="password" autocomplete="current-password" placeholder="Escribe tu contraseña"></label>
+    <button class="btn" id="loginBtn">INICIAR SESIÓN</button>
+    <button class="login-secondary" id="createBtn">CREAR MI CUENTA (solo primera vez)</button>
+    <div id="loginStatus" class="login-status" role="status"></div>
+    <p style="margin-top:12px;font-size:12px">Necesitas configurar Supabase antes de iniciar sesión. Usa una contraseña segura de al menos 8 caracteres; no uses 2222.</p>
+  </div>
+</section>
+<section id="appArea" hidden>
+<div class="topline" style="margin:4px 0 12px">
+  <div><strong>Ceviche de Cenicienta</strong><div class="muted">Tus registros sincronizados</div></div>
+  <button class="logout" id="logoutBtn">Cerrar sesión</button>
+</div>
 <div class="cards">
   <div class="card"><small>💵 ¿Cuánto he vendido?</small><strong id="totalSales">S/ 0.00</strong></div>
   <div class="card"><small>🛒 ¿Cuánto he gastado?</small><strong id="totalBuys">S/ 0.00</strong></div>
@@ -71,23 +102,121 @@ main{max-width:680px;margin:auto;padding:14px}.cards{display:grid;grid-template-
  <div class="panel"><h2>Lo que has comprado</h2><p class="hint">Aquí puedes revisar tus compras. Los equipos reutilizables aparecen aparte y no se cuentan como insumos.</p><div id="stockList"></div></div>
 </section>
 <div class="panel">
- <h2>Respaldo de tus datos</h2><p class="hint">Los datos se guardan en este navegador de este dispositivo. Descarga una copia de vez en cuando.</p>
+ <h2>Respaldo de tus datos</h2><p class="hint">Tus registros se sincronizan con Supabase cuando hay conexión. Descarga una copia de respaldo periódicamente.</p>
  <button class="btn secondary" id="export">DESCARGAR COPIA</button>
  <button class="btn secondary" id="wipe">BORRAR TODO</button>
 </div>
+</section>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+/*
+  1) Create a Supabase project.
+  2) Replace the two placeholders below with the Project URL and publishable/anon key.
+  Never put a service_role/secret key in this file.
+*/
+const SUPABASE_URL = "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY_HERE";
+const supabaseReady = SUPABASE_URL.startsWith("https://") &&
+  !SUPABASE_URL.includes("PASTE_") && !SUPABASE_ANON_KEY.includes("PASTE_") &&
+  SUPABASE_ANON_KEY.length > 20;
+const sb = supabaseReady ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
 const $=id=>document.getElementById(id);
 const money=n=>'S/ '+Number(n||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});
 const today=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
-const fmt=n=>Number(n||0).toLocaleString('es-PE',{maximumFractionDigits:3});
-let buys=[],sales=[],openingCash=0;
+const toE164 = raw => {
+  let n=String(raw||'').trim().replace(/[^\d+]/g,'');
+  if(n.startsWith('+')) return n;
+  n=n.replace(/^0/,'');
+  return '+51'+n;
+};
+let buys=[],sales=[],openingCash=0,currentUser=null,saveTimer=null;
 try{const d=JSON.parse(localStorage.getItem('cevicheSimpleV1')||'{}');buys=d.buys||[];sales=d.sales||[];openingCash=Number(d.openingCash||0)}catch(e){}
 ['sellDate','buyDate','reportDate'].forEach(id=>$(id).value=today());
-function save(){localStorage.setItem('cevicheSimpleV1',JSON.stringify({buys,sales,openingCash}));render()}
+
+function setStatus(msg){$('loginStatus').textContent=msg}
+function localSave(){localStorage.setItem('cevicheSimpleV1',JSON.stringify({buys,sales,openingCash}))}
+function statePayload(){return {buys,sales,openingCash}}
+async function cloudSave(){
+  if(!sb || !currentUser) return;
+  const {error}=await sb.from('app_state').upsert({
+    user_id:currentUser.id,
+    data:statePayload(),
+    updated_at:new Date().toISOString()
+  },{onConflict:'user_id'});
+  if(error){console.error(error);setStatus('No se pudo sincronizar. Revisa tu conexión.');}
+}
+function save(){
+  localSave();
+  render();
+  if(currentUser && sb){
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>cloudSave(),350);
+  }
+}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function preview(){let q=Math.floor(Number($('saleQty').value||0)),p=Number($('salePrice').value||0);$('salePreview').textContent=money(q>0&&p>0?q*p:0)}
 $('saleQty').addEventListener('input',preview);$('salePrice').addEventListener('input',preview);
+
+async function loadCloudState(){
+  if(!sb || !currentUser) return;
+  const {data,error}=await sb.from('app_state').select('data').eq('user_id',currentUser.id).maybeSingle();
+  if(error){console.error(error);alert('Iniciaste sesión, pero no pude leer la base de datos. Revisa que ejecutaste setup.sql en Supabase.');return;}
+  if(data && data.data){
+    buys=data.data.buys||[];sales=data.data.sales||[];openingCash=Number(data.data.openingCash||0);
+  } else {
+    // Ask before importing browser-local records so data from another account is never silently copied.
+    let importLocal=false;
+    try{
+      const old=JSON.parse(localStorage.getItem('cevicheSimpleV1')||'{}');
+      const hasLocal=(old.buys||[]).length>0||(old.sales||[]).length>0||Number(old.openingCash||0)>0;
+      if(hasLocal) importLocal=confirm('Tu cuenta en la nube aún no tiene registros. ¿Quieres importar las ventas y compras guardadas en este navegador a esta cuenta? Pulsa Cancelar para empezar vacío.');
+      if(importLocal){buys=old.buys||[];sales=old.sales||[];openingCash=Number(old.openingCash||0);}
+      else {buys=[];sales=[];openingCash=0;}
+    }catch(e){buys=[];sales=[];openingCash=0;}
+    await cloudSave();
+  }
+  localSave();render();preview();
+}
+function showApp(user){
+  currentUser=user;
+  $('loginArea').hidden=true;$('appArea').hidden=false;
+  loadCloudState();
+}
+function showLogin(){
+  currentUser=null;$('loginArea').hidden=false;$('appArea').hidden=true;
+}
+async function handleLogin(create){
+  if(!sb){setStatus('Falta configurar SUPABASE_URL y SUPABASE_ANON_KEY en index.html. Sigue README.md.');return}
+  const phone=toE164($('loginPhone').value);
+  const password=$('loginPassword').value;
+  if(!phone || password.length<8){setStatus('Escribe tu celular y una contraseña de al menos 8 caracteres.');return}
+  $('loginBtn').disabled=true;$('createBtn').disabled=true;setStatus(create?'Creando cuenta…':'Ingresando…');
+  try{
+    const result=create
+      ? await sb.auth.signUp({phone,password})
+      : await sb.auth.signInWithPassword({phone,password});
+    if(result.error) throw result.error;
+    if(create && !result.data.session){
+      setStatus('Cuenta creada, pero Supabase pide confirmar el teléfono. Configura la confirmación de teléfono o crea el usuario en Supabase y vuelve a iniciar sesión.');
+      return;
+    }
+    if(result.data.user && result.data.session){
+      currentUser=result.data.user;
+      setStatus('Sesión iniciada.');
+      await loadCloudState();
+      $('loginArea').hidden=true;$('appArea').hidden=false;
+    } else if(create) {
+      setStatus('Cuenta creada. Si habilitaste confirmación por SMS, completa la verificación y luego inicia sesión.');
+    }
+  }catch(e){setStatus(e.message||'No se pudo iniciar sesión. Revisa el celular y la contraseña.')}
+  finally{$('loginBtn').disabled=false;$('createBtn').disabled=false}
+}
+$('loginBtn').onclick=()=>handleLogin(false);
+$('createBtn').onclick=()=>handleLogin(true);
+$('logoutBtn').onclick=async()=>{if(sb) await sb.auth.signOut();showLogin();$('loginPassword').value='';setStatus('Cerraste sesión.')};
+
 $('addSale').onclick=()=>{
  const q=Math.floor(Number($('saleQty').value)),p=Number($('salePrice').value),date=$('sellDate').value||today();
  if(q<1||p<=0||!Number.isFinite(q*p)){alert('Escribe una cantidad y un precio válidos.');return}
@@ -125,8 +254,18 @@ function render(){
  $('report').innerHTML=`<div class="row"><span>Ceviches vendidos</span><strong>${fmt(rq)}</strong></div><div class="row"><span>Ventas del día</span><strong>${money(ri)}</strong></div><div class="row"><span>Compras pagadas ese día</span><strong>${money(rc)}</strong></div><div class="row"><span>Ventas menos compras de ese día</span><strong>${money(ri-rc)}</strong></div>`;
 }
 $('openingCash').addEventListener('change',()=>{openingCash=Math.max(0,Number($('openingCash').value||0));save()});
-$('export').onclick=()=>{const rows=[['tipo','fecha','producto','cantidad','unidad','monto_S/','categoria'],['saldo inicial','', '', '', '', openingCash, 'caja'],...buys.map(x=>['compra',x.date,x.name,x.qty,x.unit,x.cost,x.type||'insumo']),...sales.map(x=>['venta',x.date,'venta',x.qty,'ceviches',x.amount,'precio unitario '+(x.price??(x.amount/x.qty))])],csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));a.download='mi-cevicheria.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
-$('wipe').onclick=()=>{if(confirm('¿Borrar todas las compras, ventas y saldo inicial? No se puede deshacer.')){buys=[];sales=[];openingCash=0;save()}};
-render();preview();
+$('export').onclick=()=>{const rows=[['tipo','fecha','producto','cantidad','unidad','monto_S/','categoria'],['saldo inicial','', '', '', '', openingCash, 'caja'],...buys.map(x=>['compra',x.date,x.name,x.qty,x.unit,x.cost,x.type||'insumo']),...sales.map(x=>['venta',x.date,'venta',x.qty,'ceviches',x.amount,'precio unitario '+(x.price??(x.amount/x.qty))])],csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));a.download='ceviche-de-cenicienta.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('wipe').onclick=async()=>{if(confirm('¿Borrar todas las compras, ventas y saldo inicial? No se puede deshacer.')){buys=[];sales=[];openingCash=0;save();await cloudSave()}};
+
+async function initAuth(){
+  if(!sb){setStatus('Antes de usar el sistema, configura Supabase siguiendo README.md.');return}
+  const {data:{session}}=await sb.auth.getSession();
+  if(session?.user) showApp(session.user);
+  sb.auth.onAuthStateChange((event,session)=>{
+    if(event==='SIGNED_OUT'||!session) showLogin();
+    else if(session.user && !currentUser) showApp(session.user);
+  });
+}
+render();preview();initAuth();
 </script>
 </body></html>
