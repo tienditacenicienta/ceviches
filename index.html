@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ceviche de Cenicienta</title>
+<style>
+:root{--green:#8fc9e8;--ink:#294454;--muted:#718693;--line:#dce9ef;--bg:#f6fafc}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:var(--green);color:#fff;padding:22px 18px;border-radius:0 0 22px 22px}h1{font-size:25px;margin:0 0 4px}header p{margin:0;font-size:14px;color:#e3f1ea}
+main{max-width:680px;margin:auto;padding:14px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:9px}.card,.panel{background:#fff;border:1px solid var(--line);border-radius:15px;padding:15px;margin-bottom:12px}.card small{display:block;color:var(--muted);font-size:13px}.card strong{font-size:22px;display:block;margin-top:4px;overflow-wrap:anywhere}.panel h2{font-size:19px;margin:0 0 6px}.hint{font-size:13px;color:var(--muted);margin:0 0 13px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}.tab,button{font:inherit;cursor:pointer}.tab{padding:12px 6px;background:#fff;border:1px solid var(--line);border-radius:12px;font-weight:750;font-size:15px}.tab.active{background:var(--green);color:white}
+.screen{display:none}.screen.active{display:block}label{display:block;font-size:14px;font-weight:650;margin:10px 0}input,select{display:block;width:100%;font:inherit;padding:12px;border:1px solid #cbdad2;border-radius:10px;margin-top:5px;background:#fff;color:var(--ink);min-height:48px}
+.btn{width:100%;border:0;background:var(--green);color:#fff;border-radius:11px;padding:14px;font-weight:800;margin-top:12px;min-height:50px}.btn.secondary{background:#fff;color:var(--green);border:1px solid var(--green)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #e5ece8;padding:10px 0}.row:last-child{border-bottom:0}.muted{color:var(--muted);font-size:13px}.price{font-weight:800;white-space:nowrap}.bigtotal{font-size:25px;font-weight:850}.notice{background:#edf7fb;color:#476879;padding:12px;border-radius:12px;font-size:13px;margin-bottom:12px}.sale-entry{background:#f7faf8;border:1px solid var(--line);border-radius:11px;padding:11px;margin:8px 0}.sale-entry .row{padding:4px 0}.delete{border:1px solid #e6d4d4;color:#9b6262;background:#fff;padding:6px 9px;border-radius:8px;font-size:12px}.stockitem{border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0}.stockitem strong{display:block}.stockitem small{color:var(--muted)}.pill{display:inline-block;background:#eaf6fc;color:#477f9e;border-radius:20px;padding:3px 8px;font-size:12px;margin-top:5px}
+@media(min-width:560px){main{padding:22px}.card strong{font-size:25px}}
+</style>
+</head>
+<body>
+<header><h1>🐟 Ceviche de Cenicienta</h1><p>Anota tus ventas en el momento, desde tu celular.</p></header>
+<main>
+<div class="cards">
+  <div class="card"><small>💵 ¿Cuánto he vendido?</small><strong id="totalSales">S/ 0.00</strong></div>
+  <div class="card"><small>🛒 ¿Cuánto he gastado?</small><strong id="totalBuys">S/ 0.00</strong></div>
+  <div class="card"><small>📈 Ventas menos compras de insumos*</small><strong id="profit">S/ 0.00</strong></div>
+  <div class="card"><small>💰 Dinero estimado en caja</small><strong id="cash">S/ 0.00</strong></div>
+  <div class="card"><small>🐟 Ceviches vendidos</small><strong id="totalQty">0</strong></div>
+</div>
+<div class="panel">
+  <label>¿Cuánto dinero tenías en caja antes de empezar?<input id="openingCash" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ej. 50.00"></label>
+  <p class="hint">Coloca el dinero que ya tenías para que el cálculo de caja sea más cercano al real. Si empiezas desde cero, déjalo en 0.</p>
+</div>
+<div class="notice">Cada vez que vendas, anota la cantidad y el precio y toca <b>+ AGREGAR VENTA</b>. El indicador 'Ventas menos compras de insumos' resta las compras de ingredientes y desechables a las ventas. No es la ganancia real si te queda mercadería para otro día. Los equipos reutilizables cuentan para la caja, pero no como gasto de ingredientes.</div>
+<div class="tabs">
+  <button class="tab active" data-screen="sell">1. VENDER</button>
+  <button class="tab" data-screen="buy">2. COMPRAR</button>
+</div>
+<section id="sell" class="screen active">
+ <div class="panel">
+  <h2>➕ Agregar una venta</h2><p class="hint">Ejemplo: vendiste 2 ceviches a S/ 8. Anótalo aquí; luego puedes volver a agregar otra venta.</p>
+  <label>Fecha<input id="sellDate" type="date"></label>
+  <div class="two">
+   <label>¿Cuántos vendiste?<input id="saleQty" type="number" min="1" step="1" value="1" inputmode="numeric"></label>
+   <label>¿A cuánto cada uno? (S/)<input id="salePrice" type="number" min="0.01" step="0.01" value="12" inputmode="decimal"></label>
+  </div>
+  <div class="row"><span>Esta venta suma</span><strong class="bigtotal" id="salePreview">S/ 12.00</strong></div>
+  <button class="btn" id="addSale">＋ AGREGAR VENTA</button>
+ </div>
+ <div class="panel">
+  <h2>Ventas de este día</h2><p class="hint">Cada venta que agregues aparecerá aquí. Si te equivocas, puedes eliminarla.</p>
+  <div class="row"><span>Unidades vendidas</span><strong id="dayQty">0</strong></div>
+  <div class="row"><span>Total del día</span><strong class="bigtotal" id="daySales">S/ 0.00</strong></div>
+  <div id="salesList"></div>
+ </div>
+ <div class="panel"><h2>📅 Resumen de otro día</h2><label>Elige una fecha<input id="reportDate" type="date"></label><div id="report"></div></div>
+</section>
+<section id="buy" class="screen">
+ <div class="panel">
+  <h2>🛒 Registrar una compra</h2><p class="hint">Registra cada compra una sola vez. Ejemplo: compraste 15 limones por S/ 6.</p>
+  <label>Fecha<input id="buyDate" type="date"></label>
+  <label>¿Qué compraste?<input id="buyName" placeholder="Ej. limón, camote, pota, cucharas" maxlength="80"></label>
+  <div class="two">
+   <label>¿Cuánto compraste?<input id="buyQty" type="number" min=".001" step=".001" placeholder="Ej. 15"></label>
+   <label>Unidad<select id="buyUnit"><option value="unidades">unidades</option><option value="kg">kg</option><option value="paquetes">paquetes</option><option value="bandejas">bandejas</option><option value="litros">litros</option></select></label>
+  </div>
+  <label>¿Cuánto pagaste por todo? (S/)<input id="buyCost" type="number" min=".01" step=".01" placeholder="Ej. 6.00"></label>
+  <label>Tipo de compra<select id="buyType"><option value="insumo">Insumo o desechable (comida, bolsas, cucharas)</option><option value="equipo">Equipo reutilizable (bandeja, recipiente)</option></select></label>
+  <div class="row"><span>Precio por unidad</span><strong id="unitPrice">—</strong></div>
+  <button class="btn" id="saveBuy">GUARDAR COMPRA</button>
+ </div>
+ <div class="panel"><h2>Lo que has comprado</h2><p class="hint">Aquí puedes revisar tus compras. Los equipos reutilizables aparecen aparte y no se cuentan como insumos.</p><div id="stockList"></div></div>
+</section>
+<div class="panel">
+ <h2>Respaldo de tus datos</h2><p class="hint">Los datos se guardan en este navegador de este dispositivo. Descarga una copia de vez en cuando.</p>
+ <button class="btn secondary" id="export">DESCARGAR COPIA</button>
+ <button class="btn secondary" id="wipe">BORRAR TODO</button>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const money=n=>'S/ '+Number(n||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const today=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const fmt=n=>Number(n||0).toLocaleString('es-PE',{maximumFractionDigits:3});
+let buys=[],sales=[],openingCash=0;
+try{const d=JSON.parse(localStorage.getItem('cevicheSimpleV1')||'{}');buys=d.buys||[];sales=d.sales||[];openingCash=Number(d.openingCash||0)}catch(e){}
+['sellDate','buyDate','reportDate'].forEach(id=>$(id).value=today());
+function save(){localStorage.setItem('cevicheSimpleV1',JSON.stringify({buys,sales,openingCash}));render()}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function preview(){let q=Math.floor(Number($('saleQty').value||0)),p=Number($('salePrice').value||0);$('salePreview').textContent=money(q>0&&p>0?q*p:0)}
+$('saleQty').addEventListener('input',preview);$('salePrice').addEventListener('input',preview);
+$('addSale').onclick=()=>{
+ const q=Math.floor(Number($('saleQty').value)),p=Number($('salePrice').value),date=$('sellDate').value||today();
+ if(q<1||p<=0||!Number.isFinite(q*p)){alert('Escribe una cantidad y un precio válidos.');return}
+ sales.push({id:Date.now()+Math.random(),date,qty:q,amount:q*p,price:p,other:0});
+ save();$('saleQty').value=1;$('salePrice').value=12;preview();
+};
+$('saveBuy').onclick=()=>{
+ const name=$('buyName').value.trim(),qty=Number($('buyQty').value),cost=Number($('buyCost').value),unit=$('buyUnit').value,type=$('buyType').value;
+ if(!name||qty<=0||cost<=0){alert('Completa el producto, la cantidad y el precio total.');return}
+ buys.push({id:Date.now()+Math.random(),itemId:'i'+Date.now()+Math.random(),name,qty,unit,cost,date:$('buyDate').value||today(),type});
+ save();$('buyName').value='';$('buyQty').value='';$('buyCost').value='';$('unitPrice').textContent='—';alert('¡Compra guardada!');
+};
+$('buyQty').oninput=$('buyCost').oninput=()=>{let q=Number($('buyQty').value),c=Number($('buyCost').value);$('unitPrice').textContent=q>0&&c>0?money(c/q)+' por '+$('buyUnit').value:'—'};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t===b));document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===b.dataset.screen));render()});
+$('sellDate').onchange=render;$('reportDate').onchange=render;
+function removeSale(id){if(confirm('¿Eliminar esta venta?')){sales=sales.filter(s=>String(s.id)!==String(id));save()}}
+window.removeSale=removeSale;
+function render(){
+ const ts=sales.reduce((a,x)=>a+Number(x.amount||0),0);
+ const tb=buys.reduce((a,x)=>a+Number(x.cost||0),0);
+ const expenseBuys=buys.filter(x=>x.type!=='equipo').reduce((a,x)=>a+Number(x.cost||0),0);
+ const tq=sales.reduce((a,x)=>a+Number(x.qty||0),0);
+ $('openingCash').value=openingCash?String(openingCash):'';
+ $('totalSales').textContent=money(ts);
+ $('totalBuys').textContent=money(tb);
+ $('profit').textContent=money(ts-expenseBuys);
+ $('cash').textContent=money(openingCash+ts-tb);
+ $('totalQty').textContent=fmt(tq);
+ const date=$('sellDate').value||today(),ds=sales.filter(x=>x.date===date).sort((a,b)=>a.id-b.id),dq=ds.reduce((a,x)=>a+x.qty,0),da=ds.reduce((a,x)=>a+x.amount,0);
+ $('dayQty').textContent=fmt(dq);$('daySales').textContent=money(da);
+ $('salesList').innerHTML=ds.length?ds.map((x,i)=>`<div class="sale-entry"><div class="row"><span>Venta ${i+1}: ${fmt(x.qty)} × ${money(x.price??(x.amount/x.qty))}</span><strong>${money(x.amount)}</strong></div><div style="text-align:right"><button class="delete" onclick="removeSale('${x.id}')">Eliminar</button></div></div>`).join(''):'<p class="muted">Todavía no agregaste ventas en esta fecha.</p>';
+ const stockBuys=buys.filter(b=>b.type!=='equipo'),equip=buys.filter(b=>b.type==='equipo');
+ $('stockList').innerHTML=(stockBuys.length?'<h3>Insumos y desechables</h3>'+stockBuys.map(x=>`<div class="stockitem"><strong>${esc(x.name)}</strong><small>Compra: ${fmt(x.qty)} ${esc(x.unit)} · ${money(x.cost)} · ${esc(x.date)}</small><div class="pill">Compra registrada</div></div>`).join(''):'<p class="muted">Todavía no registraste insumos o desechables.</p>')+(equip.length?'<h3>Equipo reutilizable</h3>'+equip.map(x=>`<div class="stockitem"><strong>${esc(x.name)}</strong><small>Compra: ${fmt(x.qty)} ${esc(x.unit)} · ${money(x.cost)} · ${esc(x.date)}</small><div class="pill">Equipo · no es consumo diario</div></div>`).join(''):'');
+ const rd=$('reportDate').value||today(),rs=sales.filter(x=>x.date===rd),rb=buys.filter(x=>x.date===rd),ri=rs.reduce((a,x)=>a+x.amount,0),rq=rs.reduce((a,x)=>a+x.qty,0),rc=rb.reduce((a,x)=>a+x.cost,0);
+ $('report').innerHTML=`<div class="row"><span>Ceviches vendidos</span><strong>${fmt(rq)}</strong></div><div class="row"><span>Ventas del día</span><strong>${money(ri)}</strong></div><div class="row"><span>Compras pagadas ese día</span><strong>${money(rc)}</strong></div><div class="row"><span>Ventas menos compras de ese día</span><strong>${money(ri-rc)}</strong></div>`;
+}
+$('openingCash').addEventListener('change',()=>{openingCash=Math.max(0,Number($('openingCash').value||0));save()});
+$('export').onclick=()=>{const rows=[['tipo','fecha','producto','cantidad','unidad','monto_S/','categoria'],['saldo inicial','', '', '', '', openingCash, 'caja'],...buys.map(x=>['compra',x.date,x.name,x.qty,x.unit,x.cost,x.type||'insumo']),...sales.map(x=>['venta',x.date,'venta',x.qty,'ceviches',x.amount,'precio unitario '+(x.price??(x.amount/x.qty))])],csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));a.download='mi-cevicheria.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('wipe').onclick=()=>{if(confirm('¿Borrar todas las compras, ventas y saldo inicial? No se puede deshacer.')){buys=[];sales=[];openingCash=0;save()}};
+render();preview();
+</script>
+</body></html>
